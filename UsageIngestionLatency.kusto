@@ -1,0 +1,9 @@
+ // This query only works for the Usage table
+Usage
+| where TimeGenerated > ago(8h) 
+| extend E2EIngestionLatency = ingestion_time() - TimeGenerated 
+| extend AgentLatency = _TimeReceived - TimeGenerated 
+| summarize percentiles(E2EIngestionLatency,50,95), percentiles(AgentLatency,50,95) by Computer
+| project Computer, percentile_E2EIngestionLatency_50, percentile_E2EIngestionLatency_95, percentile_AgentLatency_50,percentile_AgentLatency_95
+| extend SumOfLatency = percentile_E2EIngestionLatency_50 + percentile_E2EIngestionLatency_95 + percentile_AgentLatency_95 + percentile_AgentLatency_50
+| sort by SumOfLatency desc
